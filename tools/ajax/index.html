@@ -13,6 +13,7 @@
                 </div>
     </div>
     <div class="btn" id="post">post</div>
+    <div class="btn" id="ajaxpost">ajaxpost</div>
     <div class="btn" id="get">get</div>
     <div class="btn" id="d3">d3</div>
 
@@ -129,6 +130,28 @@
             //         });
 
             // })
+
+            $("#ajaxpost").click(function () {
+                var deploymentType = "full";
+                var postData =msgpayload; 
+
+                $.ajax({
+                        url:"http://127.0.0.1:1880/flows",
+                        type: "POST",
+                        data: postData,
+                        contentType: "application/json; charset=utf-8",
+                        headers: {
+                            "Node-RED-Deployment-Type":deploymentType
+                        }
+                    }).done(function(data,textStatus,xhr) {
+
+                    }).fail(function(xhr,textStatus,err) {
+
+                    }).always(function() {
+        
+                    });
+
+            })
 
 
             $("#get").click(function () {
