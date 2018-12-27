@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-var sc=require('socket.io-client');
+
 
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
@@ -11,17 +11,6 @@ var users = [];
 
 app.use('/', express.static(__dirname+'/'));
 
-app.all('*',function (req, res, next) {
-     res.header('Access-Control-Allow-Origin', '*');
-     res.header('Access-Control-Allow-Headers', 'Content-Type,Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
-     res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE,OPTIONS');
-     if (req.method == 'OPTIONS') {
-         res.send(200);
-     }
-     else {
-         next();
-     }
-  });
 // 创建 application/x-www-form-urlencoded 编码解析
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.post('/process_post', urlencodedParser, function (req, res) {
@@ -72,18 +61,16 @@ io.sockets.on('connection',(socket)=>{
 
 });
 
-
+//socket.io客户端
 var pubmag={}
 pubmag.hzy=777;
 pubmag.herculeshu=true;
-
 var socket_client = ioc.connect('http://127.0.0.1:40018');
-socket_client.emit('login', { username: 'user'+ new Date().getTime()});
-socket_client.emit('conn', pubmag);
 
 socket_client.on('STR',function(data){
+  socket_client.emit('checkrec',"报告云，rpi 收到！")
   console.log(data);
 
 });
 
-console.log('服务器运行于：localhost:40019');
+console.log('rpi开始运行：localhost:40019');

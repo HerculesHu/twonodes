@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <title>Cloud40018</title>
+  </head>
+  <body>
+    <h1>Cloud40018</h1>
+
+
+    <div class="row">
+        <div>
+            <input type="file" id="files" style="display: none" onchange="fileImport();">
+            <input type="button" id="fileImport" value="导入json文件">
+        </div>
+    </div>
+
+      <div class="btn" id="ajaxpost">ajaxpost</div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/materialize.min.js"></script>
+
+    <script type="text/javascript">
+          var msgpayload=""
+
+          function fileImport() {
+              //获取读取我文件的File对象
+              var selectedFile = document.getElementById('files').files[0];
+              var name = selectedFile.name;//读取选中文件的文件名
+              var size = selectedFile.size;//读取选中文件的大小
+              // console.log("文件名:"+name+"大小:"+size);
+
+              var reader = new FileReader();//这是核心,读取操作就是由它完成.
+              reader.readAsText(selectedFile);//读取文件的内容,也可以读取文件的URL
+              reader.onload = function () {
+                  //当读取完成后回调这个函数,然后此时文件的内容存储到了result中,直接操作即可
+                  msgpayload=this.result
+                  console.log(msgpayload);
+              }
+          }
+
+            $(function () {
+                //点击导入按钮,使files触发点击事件,然后完成读取文件的操作
+                $("#fileImport").click(function () {
+                    $("#files").click();
+                })
+
+                $("#ajaxpost").click(function () {
+                var deploymentType = "full";
+                var postData =msgpayload; 
+
+                $.ajax({
+                        url:"flows",
+                        type: "POST",
+                        data: postData,
+                        contentType: "application/json; charset=utf-8",
+                        headers: {
+                            "Node-RED-Deployment-Type":deploymentType
+                        }
+                    }).done(function(data,textStatus,xhr) {
+                        console.log(data)
+
+                    }).fail(function(xhr,textStatus,err) {
+
+                    }).always(function() {
+
+                    });
+
+                })
+
+                });
+    
+    </script>
+
+
+  </body>
+</html>
