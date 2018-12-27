@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <title>Socket.IO Example</title>
+  </head>
+  <body>
+    <h1>Socket.IO及时通讯</h1>
+    <p id="count"></p>
+    
+    <form id="message-form" action="#" style="display: flex; flex-direction: row; align-items: center;">
+      <textarea id="message" rows="2" cols="30"></textarea>
+      <input type="submit" value="发送" style="background-color: blue; width: 50px; height: 30px; margin-left: 10px; color: white" />
+    </form>
+    <div id="msg">
+
+    </div>
+
+
+    <div class="row">
+        <div>
+                <input type="file" id="files" style="display: none" onchange="fileImport();">
+                <input type="button" id="fileImport" value="导入">
+            </div>
+    </div>
+    <div class="btn" id="post">post</div>
+    <div class="btn" id="ajaxpost">ajaxpost</div>
+    <div class="btn" id="get">get</div>
+    <div class="btn" id="d3">d3</div>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/materialize.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+          var msgpayload=""
+
+        function fileImport() {
+            //获取读取我文件的File对象
+            var selectedFile = document.getElementById('files').files[0];
+            var name = selectedFile.name;//读取选中文件的文件名
+            var size = selectedFile.size;//读取选中文件的大小
+            // console.log("文件名:"+name+"大小:"+size);
+
+            var reader = new FileReader();//这是核心,读取操作就是由它完成.
+            reader.readAsText(selectedFile);//读取文件的内容,也可以读取文件的URL
+            reader.onload = function () {
+                //当读取完成后回调这个函数,然后此时文件的内容存储到了result中,直接操作即可
+              
+                msgpayload=this.result
+                console.log(msgpayload);
+
+            }
+
+            
+        }
+    </script>
+
+
+    <script type="text/javascript">
+      $(function () {
+          //点击导入按钮,使files触发点击事件,然后完成读取文件的操作
+          $("#fileImport").click(function () {
+              $("#files").click();
+          })
+          $("#d3").click(function () {
+          // var msg = '[{"id":"94d88bb1.265948","type":"inject","name":"","topic":"","payload":"","repeat":"","crontab":"","once":false,"x":107,"y":164,"wires":[[]]},{"id":"cd3ae82e.713668","type":"inject","name":"","topic":"","payload":"","repeat":"","crontab":"","once":false,"x":206,"y":53,"wires":[[]]}]';
+                  var msg=msgpayload;
+                  d3.xhr("http://127.0.0.1:1880/bw").post(msg,function(err,resp) {
+                          if (resp && resp.status == 204) {
+                              console.log(resp);
+                          } else {
+
+                              console.log(err,resp);
+                          }
+                  });
+          })
+  
+
+          $("#post").click(function () {
+              // var msg = '[{"id":"94d88bb1.265948","type":"inject","name":"","topic":"","payload":"","repeat":"","crontab":"","once":false,"x":107,"y":164,"wires":[[]]},{"id":"cd3ae82e.713668","type":"inject","name":"","topic":"","payload":"","repeat":"","crontab":"","once":false,"x":206,"y":53,"wires":[[]]}]';
+              // var postData =JSON.parse(msg); 
+              var postData =msgpayload; 
+              $.post({
+                  url: "rpitest",
+                  // url: "http://123.206.127.199:1880/test/post",
+                  dataType: 'json',
+                  data: postData,
+                  // contentType: false,
+                  // processData: false,
+                  success: function (data) {
+
+                          
+                      console.log(data)
+                  },
+                  error: function (err) {
+                      console.log(err)
+                  }
+              });
+
+          })
+
+
+
+          $("#ajaxpost").click(function () {
+          var deploymentType = "full";
+          var postData =msgpayload; 
+
+          $.ajax({
+                  url:"http://127.0.0.1:1880/flows",
+                  type: "POST",
+                  data: postData,
+                  contentType: "application/json; charset=utf-8",
+                  headers: {
+                      "Node-RED-Deployment-Type":deploymentType
+                  }
+              }).done(function(data,textStatus,xhr) {
+
+              }).fail(function(xhr,textStatus,err) {
+
+              }).always(function() {
+
+              });
+
+          })
+
+
+          $("#get").click(function () {
+              var postData = {};
+              postData.one ="11111111111111111111";
+              postData.two = "222222222222222222222";
+              $.get({
+                  url: "http://127.0.0.1:1880/test/get",
+                  dataType: 'json',
+                  data: postData,
+                  success: function (data) {
+                      console.log(data)
+                  },
+                  error: function (err) {
+                      console.log(err)
+                    
+                  }
+              });
+          })
+
+          });
+
+    </script>
+
+
+    <script>
+    $(function () {
+      var socket = io.connect('http://127.0.0.1:40019');
+      socket.emit('login', { username: 'user'+ new Date().getTime()});
+
+      socket.on('users',function(data){
+        $('#count').text('当前在线人数：'+data.number);
+      });
+
+      socket.on('rpiToserver',function(data){
+
+      });
+
+      var message = document.getElementById('message');
+      $(message.form).submit(function() {
+        socket.emit('message', { text: message.value });
+        return false;
+      });
+
+      // 收到消息
+      socket.on('receive_message', function (data) {
+        $('#msg').append('<p>' + data.user + '说:' + data.text + '</p>');
+      });
+    });
+    </script>
+
+  </body>
+</html>
