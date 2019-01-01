@@ -37,14 +37,9 @@ module.exports = {
         var socket_client = ioc.connect('http://127.0.0.1:1880');
         socket_client.on('STR',function(data){
 
-
-
-
-
-
-            
+            flows.BWsocket(data);
             socket_client.emit('checkrec',"报告云，rpi 收到！")
-            console.log(data);
+            // console.log(data);
           
           });
         // Flows

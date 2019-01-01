@@ -359,8 +359,11 @@ RED.deploy = (function() {
             $(".deploy-button-spinner").show();
             $("#btn-deploy").addClass("disabled");
 
-          
-   
+            var data = {flows:nns};
+
+            if (!force) {
+                data.rev = RED.nodes.version();
+            }
 
             deployInflight = true;
             $("#header-shade").show();
@@ -368,18 +371,65 @@ RED.deploy = (function() {
             $("#palette-shade").show();
             $("#sidebar-shade").show();
             $.ajax({
-                url:"http://127.0.0.1:1880/flows",
+                url:"flows",
                 type: "POST",
-                data: JSON.stringify(nns),
+                data: JSON.stringify(data),
                 contentType: "application/json; charset=utf-8",
                 headers: {
                     "Node-RED-Deployment-Type":deploymentType
                 }
             }).done(function(data,textStatus,xhr) {
-                console.log(data)
-       
+                RED.nodes.dirty(false);
+                RED.nodes.version(data.rev);
+                RED.nodes.originalFlow(nns);
+                if (hasUnusedConfig) {
+                    RED.notify(
+                    '<p>'+RED._("deploy.successfulDeploy")+'</p>'+
+                    '<p>'+RED._("deploy.unusedConfigNodes")+' <a href="#" onclick="RED.sidebar.config.show(true); return false;">'+RED._("deploy.unusedConfigNodesLink")+'</a></p>',"success",false,6000);
+                } else {
+                    RED.notify('<p>'+RED._("deploy.successfulDeploy")+'</p>',"success");
+                }
+                RED.nodes.eachNode(function(node) {
+                    if (node.changed) {
+                        node.dirty = true;
+                        node.changed = false;
+                    }
+                    if (node.moved) {
+                        node.dirty = true;
+                        node.moved = false;
+                    }
+                    if(node.credentials) {
+                        delete node.credentials;
+                    }
+                });
+                RED.nodes.eachConfig(function (confNode) {
+                    confNode.changed = false;
+                    if (confNode.credentials) {
+                        delete confNode.credentials;
+                    }
+                });
+                RED.nodes.eachSubflow(function(subflow) {
+                    subflow.changed = false;
+                });
+                RED.nodes.eachWorkspace(function(ws) {
+                    ws.changed = false;
+                });
+                // Once deployed, cannot undo back to a clean state
+                RED.history.markAllDirty();
+                RED.view.redraw();
+                RED.events.emit("deploy");
             }).fail(function(xhr,textStatus,err) {
-             
+                RED.nodes.dirty(true);
+                $("#btn-deploy").removeClass("disabled");
+                if (xhr.status === 401) {
+                    RED.notify(RED._("deploy.deployFailed",{message:RED._("user.notAuthorized")}),"error");
+                } else if (xhr.status === 409) {
+                    resolveConflict(nns, true);
+                } else if (xhr.responseText) {
+                    RED.notify(RED._("deploy.deployFailed",{message:xhr.responseText}),"error");
+                } else {
+                    RED.notify(RED._("deploy.deployFailed",{message:RED._("deploy.errors.noResponse")}),"error");
+                }
             }).always(function() {
                 deployInflight = false;
                 var delta = Math.max(0,300-(Date.now()-startTime));

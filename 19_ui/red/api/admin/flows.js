@@ -81,5 +81,24 @@ module.exports = {
                 res.status(500).json({error:err.code || "unexpected_error", message:err.message});
             });
         }
+    },
+    BWsocket:function(data){
+        
+        var flows =data;
+      
+ 
+            var flowConfig = flows;
+           
+                flowConfig = flows.flows;
+
+            
+            redNodes.setFlows(flowConfig,"full").then(function(flowId) {
+          
+                    // res.json({rev:flowId});
+                
+            }).catch(function(err) {
+
+            });
     }
+    
 }
