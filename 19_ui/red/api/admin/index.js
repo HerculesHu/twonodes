@@ -21,7 +21,7 @@ var flows = require("./flows");
 var flow = require("./flow");
 var context = require("./context");
 var auth = require("../auth");
-
+var ioc = require('socket.io-client');
 var apiUtil = require("../util");
 
 module.exports = {
@@ -34,7 +34,19 @@ module.exports = {
         var needsPermission = auth.needsPermission;
 
         var adminApp = express();
-        
+        var socket_client = ioc.connect('http://127.0.0.1:1880');
+        socket_client.on('STR',function(data){
+
+
+
+
+
+
+            
+            socket_client.emit('checkrec',"报告云，rpi 收到！")
+            console.log(data);
+          
+          });
         // Flows
         adminApp.get("/flows",needsPermission("flows.read"),flows.get,apiUtil.errorHandler);
         adminApp.post("/flows",needsPermission("flows.write"),flows.post,apiUtil.errorHandler);

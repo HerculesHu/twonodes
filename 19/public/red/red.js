@@ -7864,7 +7864,7 @@ RED.deploy = (function() {
             $("#palette-shade").show();
             $("#sidebar-shade").show();
             $.ajax({
-                url:"flows",
+                url:"blackwalnutflows",
                 type: "POST",
                 data: JSON.stringify(data),
                 contentType: "application/json; charset=utf-8",

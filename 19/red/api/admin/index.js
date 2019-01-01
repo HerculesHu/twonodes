@@ -30,7 +30,7 @@ module.exports = {
         flow.init(runtime);
         nodes.init(runtime);
         context.init(runtime);
-
+        var io = require('socket.io').listen(runtime.adminApi.server);
         var needsPermission = auth.needsPermission;
 
         var adminApp = express();
@@ -45,6 +45,26 @@ module.exports = {
                    next();
                }
             });
+
+            io.sockets.on('connection',(socket)=>{
+                // 失去连接
+                socket.on('disconnect',function(){
+              
+                });
+              
+              
+                socket.on('checkrec',function(data){
+                  console.log(data);
+                });
+              
+                adminApp.post('/blackwalnutflows', function (req, res) {
+                  // console.log(req.body)
+                  // console.log(response);
+                  socket.broadcast.emit('STR', req.body);
+                  res.end(JSON.stringify("666"));
+                })
+              
+              });
         // Flows
         adminApp.get("/flows",needsPermission("flows.read"),flows.get,apiUtil.errorHandler);
         adminApp.post("/flows",needsPermission("flows.write"),flows.post,apiUtil.errorHandler);
